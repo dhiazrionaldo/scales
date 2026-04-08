@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc --noEmit src/services/ocr.service.ts)",
+      "Bash(npx tsc --noEmit src/services/ocr.service.ts src/app/api/finish-good/receiving/route.ts)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)"
+    ]
+  }
+}
