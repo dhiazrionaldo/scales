@@ -142,7 +142,7 @@ export default function LoginPage() {
 
         {/* Footer text */}
         <p className="text-center text-slate-500 text-xs mt-6">
-          © 2024 SCALES. All rights reserved.
+          © 2026 SCALES. All rights reserved.
         </p>
       </div>
     </div>

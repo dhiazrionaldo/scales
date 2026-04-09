@@ -84,7 +84,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .eq('pallets.hu_labels.item_category', 'FINISH_GOOD');
 
     const { data: receivedItems, error: fetchError } = await query;
-    console.log(receivedItems)
+    
     if (fetchError) {
       console.error('[RECEIVED-REPORT] Database error:', fetchError);
       return NextResponse.json(
@@ -108,9 +108,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const receivedDays = Math.floor(
         (now.getTime() - receivedDate.getTime()) / (1000 * 60 * 60 * 24)
         );
-
-        console.log('huLabel:', huLabel);        // 👈 temp debug, remove after confirming
-        console.log('location:', location);      // 👈 temp debug, remove after confirming
 
         return {
         id: item.id,

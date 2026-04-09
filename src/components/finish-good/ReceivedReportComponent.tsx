@@ -80,7 +80,7 @@ export function ReceivedReportComponent({
         }
 
         const result = await response.json();
-        console.log(result.data)
+        
         if (result.success) {
           setItems(result.data);
           setMetrics(result.metrics);

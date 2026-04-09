@@ -84,8 +84,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           item_category
         ),
         warehouse_locations(location_code),
-        receiving(id, received_time),
-        putaway_tasks(id, status, completed_at),
+        receiving(id, received_time, operator_id),
+        putaway_tasks(id, status, completed_at, operator_id),
         outbound(id, shipped_at)
       `
       )
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .select('id, full_name');
 
     const userMap = new Map(users?.map((u: any) => [u.id, u.full_name]) || []);
-
+    
     // Get audit logs for detailed timeline
     const { data: auditLogs } = await supabase
       .from('audit_logs')
@@ -150,32 +150,39 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           currentStage = 'SHIPMENT';
         }
 
-        // Build checkpoints timeline
+        // Pull IDs from the task tables (operator_id), falling back to the audit logs (user_id)
+        const receivedOpId = receiving?.operator_id || auditTrail.find((a: any) => a.operation_type === 'PALLET_RECEIVED')?.user_id;
+        const putawayOpId = putawayTask?.operator_id || auditTrail.find((a: any) => a.operation_type === 'PALLET_PUTAWAY_COMPLETED')?.user_id;
+        const shippedOpId = outbound?.operator_id || auditTrail.find((a: any) => a.operation_type === 'PALLET_SHIPPED')?.user_id;
+        // Build checkpoints timeline with the accurately mapped names
         const checkpoints: JourneyCheckpoint[] = [
           {
             stage: 'RECEIVING',
             status: 'RECEIVED',
             timestamp: receiving?.received_time || pallet.received_at,
-            operatorId: auditTrail.find((a: any) => a.operation_type === 'PALLET_RECEIVED')?.operator_id || null,
+            operatorId: receivedOpId || null,
+            operatorName: receivedOpId ? (userMap.get(receivedOpId) || 'Unknown') : null,
           },
           {
             stage: 'PUTAWAY',
             status: putawayTask?.status || 'PENDING',
             timestamp: putawayTask?.completed_at || (pallet.stored_at ? pallet.stored_at : null),
-            operatorId: auditTrail.find((a: any) => a.operation_type === 'PALLET_PUTAWAY_COMPLETED')?.operator_id || null,
+            operatorId: putawayOpId || null,
+            operatorName: putawayOpId ? (userMap.get(putawayOpId) || 'Unknown') : null,
           },
           {
             stage: 'SHIPMENT',
             status: outbound?.shipped_at ? 'SHIPPED' : 'PENDING',
             timestamp: outbound?.shipped_at || null,
-            operatorId: auditTrail.find((a: any) => a.operation_type === 'PALLET_SHIPPED')?.operator_id || null,
+            operatorId: shippedOpId || null,
+            operatorName: shippedOpId ? (userMap.get(shippedOpId) || 'Unknown') : null,
           },
         ];
-
-        // Get PIC name from first audit log that has operator_id
-        const picAudit = auditTrail.find((a: any) => a.user_id);
-        const picName = picAudit ? (userMap.get(picAudit.user_id) || 'Unknown') : 'Pending';
-
+        
+        // Get PIC name from the first available audit log using user_id
+        const picRecord = checkpoints.find((a: any) => a.operatorId)?.operatorId ? checkpoints.find((a: any) => a.operatorId) : auditTrail.find((a: any) => a.user_id);
+        const picName = picRecord ? (userMap.get(picRecord.operatorId) || 'Unknown') : 'Pending';
+        
         return {
           id: pallet.id,
           pallet_id: pallet.id,

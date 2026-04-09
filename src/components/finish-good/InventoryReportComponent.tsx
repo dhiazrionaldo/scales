@@ -83,7 +83,7 @@ export function InventoryReportComponent({
         }
 
         const result = await response.json();
-        console.log(result)
+        
         if (result.success) {
           setItems(result.data);
           setMetrics(result.metrics);
@@ -186,10 +186,25 @@ export function InventoryReportComponent({
     },
     {
       accessorKey: 'created_at',
-      header: 'Received Date',
+      header: 'Received',
       cell: ({ row }) => {
         const date = new Date(row.getValue('created_at') as string);
         return date.toLocaleDateString();
+      },
+    },
+    {
+      accessorKey: 'days_in_stock',
+      header: 'Days in Stock',
+      cell: ({ row }) => {
+        const date = new Date(row.getValue('created_at') as string);
+        const now = new Date();
+        const days = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+        const isOverdue = days > 3;
+        return (
+          <span className={isOverdue ? 'text-red-600 font-semibold' : ''}>
+            {isOverdue && '⚠️'} {days}d 
+          </span>
+        );
       },
     },
   ];

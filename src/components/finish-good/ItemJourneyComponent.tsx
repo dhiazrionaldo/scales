@@ -103,13 +103,13 @@ export function ItemJourneyComponent({ warehouseId, companyId }: Props) {
 
       const response = await fetch(`/api/finish-good/item-journey?${params}`);
       const result = await response.json();
-      console.log(result)
+      
       if (!result.success) {
         setError(result.error || 'Failed to fetch journeys');
         setJourneys([]);
         return;
       }
-
+      
       setJourneys(result.data || []);
       setStatuses(result.statuses || []);
       setLocations(result.locations || []);
@@ -125,7 +125,6 @@ export function ItemJourneyComponent({ warehouseId, companyId }: Props) {
 
   useEffect(() => {
     fetchData();
-    console.log('category: ', category)
   }, [fetchData]);
 
   const toggleRow = (id: string) => {

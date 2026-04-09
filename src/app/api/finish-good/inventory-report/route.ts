@@ -89,16 +89,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         { status: 500 }
       );
     }
+    
 
     // Query inventory summary for metrics
     let metricsQuery = supabase
       .from('inventory')
-      .select('total_qty, available_qty, damaged_qty')
+      .select('total_qty, available_qty, damaged_qty, created_at')
       .eq('warehouse_id', warehouseId)
       .eq('company_id', companyId);
 
     const { data: inventoryMetrics, error: metricsError } = await metricsQuery;
-
+    
     if (metricsError) {
       console.error('[INVENTORY-REPORT] Error fetching metrics:', metricsError);
     }
